@@ -170,64 +170,60 @@
         <iframe id="formFrame" src="https://docs.google.com/forms/d/e/1FAIpQLSdvEeyZEGtNJg0z7afab9vbp214Ft4-eOZ3fxygHOvzND_Mlg/viewform?usp=sf_link"></iframe>
     </div>
 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Έλεγχος Τοποθεσίας</title>
+    <style>
+        #success { color: green; }
+        #error { color: red; }
+    </style>
     <script>
-        const universityLat = 39.620595; // Γεωγραφικό πλάτος Πανεπιστημίου Ιωαννίνων
-        const universityLng = 20.853746; // Γεωγραφικό μήκος Πανεπιστημίου Ιωαννίνων
-        const radius = 1.5; // Ακτίνα σε χιλιόμετρα
-
         function checkLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(success, error);
             } else {
-                document.getElementById("status").innerHTML = "<p class='error'>Η γεωγραφική τοποθεσία δεν υποστηρίζεται από τον περιηγητή σας.</p>";
+                document.getElementById("status").innerText = "Το πρόγραμμα περιήγησης δεν υποστηρίζει τοποθεσία.";
             }
         }
 
         function success(position) {
+            const universityLat = 39.620001; // Συντεταγμένες Πανεπιστημίου Ιωαννίνων
+            const universityLng = 20.854; // Συντεταγμένες Πανεπιστημίου Ιωαννίνων
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
-            const distance = getDistanceFromLatLonInKm(userLat, userLng, universityLat, universityLng);
 
-            if (distance <= radius) {
-                document.getElementById("status").innerHTML = "<p class='success'>Η τοποθεσία σας επιβεβαιώθηκε! Είστε εντός της περιοχής του Πανεπιστημίου Ιωαννίνων.</p>";
-                document.getElementById("formFrame").style.display = "block"; // Εμφάνιση φόρμας
+            const distance = calculateDistance(userLat, userLng, universityLat, universityLng);
+            if (distance <= 1.5) { // Απόσταση σε χιλιόμετρα
+                document.getElementById("status").innerText = "Επιτυχής τοποθεσία.";
+                document.getElementById("status").style.color = "green";
+                document.getElementById("accessCode").innerText = "Κωδικός: 123456"; // Σταθερός κωδικός
             } else {
-                document.getElementById("status").innerHTML = "<p class='error'>Δεν βρίσκεστε εντός της επιτρεπόμενης περιοχής. Η παρουσία δεν μπορεί να καταγραφεί.</p>";
-                document.getElementById("formFrame").style.display = "none"; // Απόκρυψη φόρμας
+                document.getElementById("status").innerText = "Η τοποθεσία δεν είναι εντός της επιτρεπόμενης ακτίνας.";
+                document.getElementById("status").style.color = "red";
             }
         }
 
         function error() {
-            document.getElementById("status").innerHTML = "<p class='error'>Αδυναμία ανεύρεσης της τοποθεσίας σας.</p>";
+            document.getElementById("status").innerText = "Η τοποθεσία δεν μπόρεσε να επαληθευτεί.";
+            document.getElementById("status").style.color = "red";
         }
 
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+        function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; // Ακτίνα της Γης σε χιλιόμετρα
-            const dLat = deg2rad(lat2 - lat1);
-            const dLon = deg2rad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c; // Απόσταση σε χιλιόμετρα
-        }
-
-        function deg2rad(deg) {
-            return deg * (Math.PI / 180);
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                0.5 - Math.cos(dLat)/2 + 
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                (1 - Math.cos(dLon))/2;
+            return R * 2 * Math.asin(Math.sqrt(a));
         }
     </script>
-</body>
-</html>
-cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c; // Απόσταση σε χιλιόμετρα
-        }
-
-        function deg2rad(deg) {
-            return deg * (Math.PI / 180);
-        }
-    </script>
+</head>
+<body onload="checkLocation()">
+    <h1>Έλεγχος Τοποθεσίας</h1>
+    <p id="status">Επιβεβαίωση τοποθεσίας σε εξέλιξη...</p>
+    <p id="accessCode"></p>
 </body>
 </html>
